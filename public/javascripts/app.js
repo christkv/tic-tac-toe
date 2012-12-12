@@ -1,6 +1,6 @@
 var api = new API();
 var application_state = {
-  session_id: null;
+  session_id: null
 }
 
 api.on("init", function(data) {

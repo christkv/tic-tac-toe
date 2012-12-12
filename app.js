@@ -1,7 +1,9 @@
 var express = require('express')
   , MongoClient = require('mongodb').MongoClient
   , format = require('util').format
-  , app = express();
+  , app = express()
+  , server = require('http').createServer(app)
+  , io = require('socket.io').listen(server);
 
 /** 
  * configure mongodb
@@ -38,13 +40,28 @@ app.get('/', function(request, response) {
 });
 
 /**
+ * Socket IO protocol handlers
+ */
+io.sockets.on('connection', function (socket) {
+  socket.on('register', function (data) {
+    console.log("========= register")
+    console.dir(data)
+  });
+
+  socket.on('login', function (data) {
+    console.log("========= login")
+    console.dir(data)
+  });
+});
+
+/**
  * Connect to MongoDB and start the server
  */
 MongoClient.connect(MONGO_DB_URL, function(err, _db) {
   if(err) throw err;
   db = _db;
 
-  app.listen(APP_PORT, APP_HOST, function(err) {
+  server.listen(APP_PORT, APP_HOST, function(err) {
     if(err) {
       db.close();
       throw err;
