@@ -18,7 +18,9 @@
     "tutorial"
   ],
   "dependencies": {
-    "mongodb": "1.2.4"
+    "mongodb": "1.2.4",
+    "express": "3.0.4",
+    "socket.io": "0.9.11"
   },
   "author": "Christian Kvalheim",
   "license": "BSD",

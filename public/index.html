@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+  <head>
+    <meta charset="utf-8">
+    <title ng-bind-template="Tic-Tac-Toe {{pageTitle}}">Tic-Tac-Toe</title>
+  </head>
+  <body>
+    <div>
+      <ng-view></ng-view>
+    </div>
+    <script type="text/javascript" src="javascripts/angular.min.js"></script>
+    <script type="text/javascript" src="javascripts/app.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </body>
+</html>
