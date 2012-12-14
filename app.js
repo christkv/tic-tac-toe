@@ -7,6 +7,14 @@ var express = require('express')
   , crypto = require('crypto')
   , cookie = require('cookie');
 
+var user = require('./lib/models/user')
+  , gamer = require('./lib/models/gamer');
+
+var login_controller = require('./lib/controllers/login_controller')
+  , gamer_controller = require('./lib/controllers/gamer_controller');
+
+console.dir(gamer_controller)
+
 /** 
  * configure mongodb
  */
@@ -75,9 +83,9 @@ io.set('authorization', function (data, accept) {
  * Wire up Socket IO protocol command handlers
  */
 io.sockets.on('connection', function (socket) {
-  socket.on('register', register_handler(socket, db));
-  socket.on('login', login_handler(socket, db));
-  socket.on('find_all_available_gamers', find_all_available_gamers_handler(socket, db));
+  socket.on('register', login_controller.register_handler(socket, session_store, db));
+  socket.on('login', login_controller.login_handler(socket, session_store, db));
+  socket.on('find_all_available_gamers', gamer_controller.find_all_available_gamers_handler(io, socket, session_store, db));
 });
 
 /**
@@ -87,8 +95,8 @@ MongoClient.connect(MONGO_DB_URL, function(err, _db) {
   if(err) throw err;
   db = _db;
 
-  // Create the ttl collection for active gamers, ttl collection for automatic garbage collection
-  db.collection('gamers').ensureIndex({updated_on: 1}, {expireAfterSeconds: (60 * 60)}, function(err, result) {
+  gamer(db).init(function(err, result) {
+    if(err) throw err;
 
     server.listen(APP_PORT, APP_HOST, function(err) {
       if(err) {
@@ -100,142 +108,3 @@ MongoClient.connect(MONGO_DB_URL, function(err, _db) {
     });
   });
 });
-
-/**
- * All event handlers
- */
-var register_handler = function(socket, db) {
-  return function(data) {
-    var full_name = data.full_name;
-    var user_name = data.user_name;
-    var password = data.password;
-
-    var users = db.collection('users');
-    users.findOne({user_name: user_name}, function(err, doc) {
-      // Got error return to client
-      if(err) return emit_error("register", err.message, socket);
-      // User exists return error
-      if(doc != null) 
-        return emit_error("register", "User with user name " + user_name + " already exists", socket);
-
-      // Hash password
-      var sha1 = crypto.createHash('sha1');
-      sha1.update(password);
-      // Get digest
-      var hashed_password = sha1.digest('hex');
-
-      // No user create one and send confirmation to user
-      users.insert({
-        full_name: full_name, user_name: user_name, password: hashed_password
-      }, function(err, result) {
-        if(err) return emit_error("register", err.message, socket);
-        
-        emit_login_or_registration_ok("register", db, user_name, socket);
-      })
-    })
-  }
-}
-
-var login_handler = function(socket, db) {
-  return function(data) {
-    var user_name = data.user_name;
-    var password = data.password;
-
-    // Hash password
-    var sha1 = crypto.createHash('sha1');
-    sha1.update(password);
-    // Get digest
-    var hashed_password = sha1.digest('hex');
-    // Check if user exists
-    var users = db.collection('users');
-    var gamers = db.collection('gamers');
-    users.findOne({user_name: user_name, password: hashed_password}, function(err, user) {
-      if(err) return emit_error("login", err.message, socket);
-      if(user == null) return emit_error("login", "User or Password is incorrect", socket);
-      
-      emit_login_or_registration_ok("login", db, user_name, socket);
-    });
-  }
-}
-
-var emit_login_or_registration_ok = function(event, db, user_name, socket) {
-  var gamers = db.collection('gamers');
-  // Save the user as active, including session id
-  gamers.update({user_name: user_name}, {$set: {updated_on: new Date(), sid:socket.handshake.sessionID}}
-    , {upsert:true}, function(err, result) {
-    if(err) return emit_error(event, err.message, socket);
-    if(result == 0) return emit_error(event, "Failed to Save user as active", socket);
-
-    // Set authenticated
-    session_store.sessions[socket.handshake.sessionID].user_name = user_name;
-    // Return succesful login (including setting up user as logged in)
-    emit_message(event, {
-      ok: true
-    }, socket);
-  });  
-}
-
-var find_all_available_gamers_handler = function(socket, db) {
-  return function(data) {
-    console.log("==========================================")
-    console.dir(socket.handshake.sessionID)
-    console.dir(session_store.sessions[socket.handshake.sessionID])
-    // Verify that we are logged in
-    if(!is_authenticated(socket)) return emit_error("find_all_public_games", "User not authenticated", socket);
-    
-    // Locate all active socket connections, and get the gamers information
-    var clients = io.sockets.clients();
-    var sids = [];
-
-    // Iterate over all the users but ignore us
-    for(var i = 0; i < clients.length; i++) {
-      if(clients[i].handshake.sessionID != socket.handshake.sessionID) {
-        sids.push(clients[i].handshake.sessionID);
-      }
-    }
-
-    console.dir(sids)
-
-    // Alright grab all the gamers information
-    var gamers_collection = db.collection('gamers');
-    gamers_collection.find({sid: {$in: sids}}).toArray(function(err, gamers) {
-      if(err) return emit_error("find_all_available_gamers", err.message, socket);    
-
-      // Update all the gamers last active check time
-      gamers_collection.update({sid:{$in: sids}}, {$set: {updated_on: new Date()}}, function(err, result) {
-        if(err) return emit_error("find_all_available_gamers", err.message, socket);    
-  
-        // Return the games
-        emit_message("find_all_available_gamers", {
-            ok: true
-          , gamers: gamers
-        }, socket);    
-      });
-    });    
-  } 
-}
-
-/**
- * Handlers
- */
-var is_authenticated = function(socket) {
-  if(session_store.sessions[socket.handshake.sessionID] == null) return false;
-  if(session_store.sessions[socket.handshake.sessionID].user_name == null) return false;
-  return true;
-}
-
-var emit_error = function(event, err, socket) {
-  socket.emit("data", {
-      event: event
-    , ok: false
-    , is_error:true
-    , error: err
-  });
-}
-
-var emit_message = function(event, message, socket) {
-  // Add event
-  message.event = event;
-  // Emit
-  socket.emit("data", message);
-}
