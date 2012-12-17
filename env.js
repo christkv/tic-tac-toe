@@ -49,7 +49,7 @@ var initialize = function(callback) {
    */
   io.set('authorization', function (data, accept) {
     // check if there's a cookie header
-    if(data.headers.cookie) {
+    if(data.headers['cookie']) {
       // if there is, parse the cookie
       data.cookie = cookie.parse(data.headers.cookie);
       // note that you will need to use the same key to grad the

@@ -7,14 +7,12 @@
       <th></th>
     </thead>
     <tbody>
+      {{#gamers}}
       <tr>
-        <td>
-          Gamer
-        </td>
-        <td>
-          Play
-        </td>
+        <td width="100%">{{user_name}}</td>
+        <td><a href="#" id="gamer_{{_id}}">Play</a></td>
       </tr>
+      {{/gamers}}
     </tbody>
   </table>
 </div>

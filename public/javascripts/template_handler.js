@@ -35,6 +35,15 @@ TemplateHandler.prototype.setTemplate = function(id, template_name, context) {
   if(this.template_file_content[template_name] == null) throw new Error("no template name " + template_name + " loaded");
   // Ensure at least empty context
   context = context == null ? {} : context;
+  // Render template
+  var rendered_template = Mustache.render(this.template_file_content[template_name], context);
   // No error render the template
-  container.html(Mustache.render(this.template_file_content[template_name], context));
+  container.html(rendered_template);
+}
+
+TemplateHandler.prototype.render = function(template_name, context) {
+  // Ensure at least empty context
+  context = context == null ? {} : context;
+  // Render template
+  return Mustache.render(this.template_file_content[template_name], context);
 }

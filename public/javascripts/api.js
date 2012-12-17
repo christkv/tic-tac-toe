@@ -1,14 +1,17 @@
 var API = function() {
   var self = this;
+
   this.socket = io.connect("http://localhost");
   this.handlers = {};
   this.once_handlers = {};
 
   this.socket.on("data", function(data) {
-    if(data && data.event) {
-      console.log("================================== DATA")
-      console.log(data)
+    console.log("------------------------- recieved")
+    console.log(data)
+    console.log(Object.keys(self.handlers))
+    console.log(Object.keys(self.once_handlers))
 
+    if(data && data.event) {
       var handlers = self.handlers[data.event];
       if(handlers != null) {
         for(var i = 0; i < handlers.length; i++) {
@@ -21,6 +24,8 @@ var API = function() {
         while(handlers.length > 0) {
           data.is_error ? handlers.pop()(data) : handlers.pop()(null, data);
         }
+
+        delete self.once_handlers[data.event];
       }
     }
   });
@@ -71,10 +76,25 @@ API.prototype.find_all_available_gamers = function(callback) {
   // Register callback
   this.once("find_all_available_gamers", function(err, data) {
     if(err) return callback(err, null);
-    callback(null, data.games);
+    callback(null, data.gamers);
   });
   // Fire message
   this.socket.emit("find_all_available_gamers", {});
+}
+
+API.prototype.invite_gamer = function(gamer, callback) {
+  this.once("invite_gamer", callback);
+  this.socket.emit("invite_gamer", gamer);
+} 
+
+API.prototype.decline_game = function(invite, callback) {
+  this.once("decline_game", callback)
+  this.socket.emit("decline_game", invite);
+}
+
+API.prototype.accept_game = function(invite, callback) {
+  this.once("accept_game", callback)
+  this.socket.emit("accept_game", invite);
 }
 
 API.prototype.join_game = function(game_id, callback) {  

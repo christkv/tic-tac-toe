@@ -21,7 +21,7 @@
     "mongodb": "1.2.4",
     "express": "3.0.4",
     "cookie": "0.0.5",
-    "socket.io": "0.9.11"
+    "socket.io": "0.9.13"
   },
   "author": "Christian Kvalheim",
   "license": "BSD",
