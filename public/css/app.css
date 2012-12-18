@@ -1,0 +1,16 @@
+.board {
+  margin-left:20px;
+}
+
+.board_row {
+  margin-bottom: 10px;
+}
+
+.board_row span {
+  margin-right: 5px
+}
+
+#chat {
+  border: 1px solid gray;
+  height: 400px;
+}

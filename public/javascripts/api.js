@@ -83,17 +83,29 @@ API.prototype.find_all_available_gamers = function(callback) {
 }
 
 API.prototype.invite_gamer = function(gamer, callback) {
-  this.once("invite_gamer", callback);
+  this.once("invite_gamer", function(err, data) {
+    if(err) return callback(err);
+    callback(null, data.game);
+  });
+
   this.socket.emit("invite_gamer", gamer);
 } 
 
 API.prototype.decline_game = function(invite, callback) {
-  this.once("decline_game", callback)
+  this.once("decline_game", function(err, data) {
+    if(err) return callback(err);
+    callback(null, data.game);
+  });
+
   this.socket.emit("decline_game", invite);
 }
 
 API.prototype.accept_game = function(invite, callback) {
-  this.once("accept_game", callback)
+  this.once("accept_game", function(err, data) {
+    if(err) return callback(err);
+    callback(null, data.game);
+  });
+
   this.socket.emit("accept_game", invite);
 }
 
@@ -101,6 +113,16 @@ API.prototype.join_game = function(game_id, callback) {
 }
 
 API.prototype.place_marker = function(game_id, x, y, callback) {  
+  this.once("place_marker", function(err, data) {
+    if(err) return callback(err);
+    callback(null, data.move);    
+  })
+
+  this.socket.emit("place_marker", {
+      game_id: game_id
+    , x: x
+    , y: y
+  });
 }
 
 API.prototype.quit_game = function(game_id, callback) {  

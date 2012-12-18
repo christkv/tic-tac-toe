@@ -27,13 +27,29 @@ api.on("init", function(data) {
   application_state.session_id = data.session_id;
 });
 
-api.on("game_move", function(err, data) {
+api.on('game_move', function(err, data) {
+  console.log("========= game_move")
+  console.log(data)
+
+  if(err) return;
+  // Get the move data
+  var marker = data.move.marker;
+  var y = data.move.y;
+  var x = data.move.x;
+  // Select the right box and mark it
+  var cell_id_image = "#row" + y + "cell" + x + " img";
+  // It was our turn, let's show the mark we set down
+  if(marker == 'x') {
+    $(cell_id_image).attr("src", "/img/cross.png");
+  } else {
+    $(cell_id_image).attr("src", "/img/circle.png");
+  }
 });
 
-api.on("game_over", function(err, data) {
+api.on('game_over', function(err, data) {
 });
 
-api.on("game_invite", function(err, data) {
+api.on('game_invite', function(err, data) {
   if(data == null) return;  
   // Save the invitation in our application state
   application_state.invite = data;
@@ -103,9 +119,9 @@ var invite_gamer_button_handler = function(application_state, api, template_hand
       if(application_state.gamers[i]._id == id) {
         var gamer = application_state.gamers[i];
         // Lets fire off an invitation to the user
-        api.invite_gamer(gamer, function(err, status) {
-          console.log(err)
+        api.invite_gamer(gamer, function(err, game) {
           if(err) return decline_box_show(template_handler, gamer);
+          setupBoardGame(application_state, api, template_handler, game);
         })        
       }
     }
@@ -116,8 +132,10 @@ var invite_accept_button_handler = function(application_state, api, template_han
   return function() {
     console.log("=== invite_accept_button_handler")    
     // Accept the game invite
-    api.accept_game(application_state.invite, function(err, result) {
-
+    api.accept_game(application_state.invite, function(err, game) {
+      if(err) return error_box_show(err.error);
+      // Setup the game
+      setupBoardGame(application_state, api, template_handler, game);
     });
   }
 }
@@ -127,7 +145,56 @@ var invite_decline_button_handler = function(application_state, api, template_ha
     console.log("=== invite_decline_button_handler")
     // Decline the game invite
     api.decline_game(application_state.invite, function(err, result) {
+        if(err) return error_box_show(err.error);
+      // Nothing to do the box went away
+    });
+  }
+}
 
+/*********************************************************************************************
+ * Setup methods
+ ********************************************************************************************/
+var setupBoardGame = function(application_state, api, template_handler, game) {
+  // Save current game to state
+  application_state.game = game;
+  // Let's render the board game with the chat window
+  template_handler.setTemplate("#view", "board", {});
+  // Set the marker for our player (X if we are the starting player)
+  application_state.marker = application_state.session_id == game.current_player ? "x" : "o";
+  // Just print the state
+  console.log(application_state)
+
+  // Get all the rows
+  var rows = $('#board div');
+
+  // Map up our event handlers
+  for(var i = 0; i < rows.length; i++) {
+    var cells = $('#' + rows[i].id + " span");
+
+    // For each cell map it
+    for(var j = 0; j < cells.length; j++) {
+      $("#" + cells[j].id).click(game_board_cell_handler(application_state, api, template_handler, game));
+    }
+  }
+}
+
+var game_board_cell_handler = function(application_state, api, template_handler, game) {
+  return function() {
+    // Split up the id to get the cell position
+    var row_number = parseInt(this.id.split("cell")[0].split("row")[1], 10);
+    var cell_number = parseInt(this.id.split("cell")[1], 10);
+    var cell_id = this.id;
+    var cell_id_image = "#" + cell_id + " img";
+    // Let's attempt to do a move
+    api.place_marker(application_state.game._id, cell_number, row_number, function(err, move) {
+      if(err) return error_box_show(err.error);
+
+      // It was our turn, let's show the mark we set down
+      if(move.marker == 'x') {
+        $(cell_id_image).attr("src", "/img/cross.png");
+      } else {
+        $(cell_id_image).attr("src", "/img/circle.png");
+      }
     });
   }
 }

@@ -5,6 +5,7 @@ var env                               = require('./env')
   , invite_gamer                      = require('./lib/handlers/gamer_handler').invite_gamer
   , decline_game                      = require('./lib/handlers/gamer_handler').decline_game
   , accept_game                       = require('./lib/handlers/gamer_handler').accept_game
+  , place_marker                      = require('./lib/handlers/gamer_handler').place_marker
   , main_controller                   = require('./lib/controllers/main_controller');
 
 env.initialize(function(err, app, io, session_store, db) {  
@@ -25,6 +26,7 @@ env.initialize(function(err, app, io, session_store, db) {
     socket.on('invite_gamer', invite_gamer(io, socket, session_store, db));
     socket.on('decline_game', decline_game(io, socket, session_store, db));
     socket.on('accept_game', accept_game(io, socket, session_store, db));
+    socket.on('place_marker', place_marker(io, socket, session_store, db));
   });
 
   //
