@@ -74,7 +74,7 @@ api.on('game_invite', function(err, data) {
   // Save the invitation in our application state
   application_state.invite = data;
   // Open the invite box
-  game_invite_box_show(data);
+  game_invite_box_show(data.gamer);
 });
 
 api.on('chat_message', function(err, data) {
@@ -332,7 +332,7 @@ var decline_box_show = function(template_handler, gamer) {
 var game_invite_box_show = function(gamer) {
   // Set fields for the error
   $('#invite_box_header').html("You have been invited to a game");
-  $('#invite_box_body').html("BODY");
+  $('#invite_box_body').html("The user <strong>" + gamer.user_name + "</strong> has challenged you to a game");
   // Show the modal box
   $('#invite_box').modal({backdrop:true, show:true})  
   // Add the handlers

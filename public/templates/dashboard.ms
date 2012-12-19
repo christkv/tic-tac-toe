@@ -1,4 +1,4 @@
-<div class="span6">
+<div class="span8">
   <h2>All Active Users</h2>
   <p>All users currently on the system, invite them to play a game.</p>
   <table class="table table-striped">
@@ -16,25 +16,9 @@
     </tbody>
   </table>
 </div>
-<div class="span6">
-  <h2>Log in</h2>
-  <form class="form-horizontal">
-    <div class="control-group">
-      <label class="control-label" for="inputUserNameLogin">User Name</label>
-      <div class="controls">
-        <input type="text" id="inputUserNameLogin" placeholder="User Name">
-      </div>
-    </div>
-    <div class="control-group">
-      <label class="control-label" for="inputPasswordLogin">Password</label>
-      <div class="controls">
-        <input type="password" id="inputPasswordLogin" placeholder="Password">
-      </div>
-    </div>
-    <div class="control-group">
-      <div class="controls">
-        <button type="button" class="btn" id="login_button">Register</button>
-      </div>
-    </div>
-  </form>
+<div class="span4">
+  <h2>The Dashboard</h2>
+  <p>
+    The list on the left side shows all the active players (connected via socket.io) and lets you challenge one of them to a game. Click on the play link to give it a go.
+  </p>
 </div>
