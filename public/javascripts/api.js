@@ -6,23 +6,18 @@ var API = function() {
   this.once_handlers = {};
 
   this.socket.on("data", function(data) {
-    // console.log("------------------------- recieved")
-    // console.log(data)
-    // console.log(Object.keys(self.handlers))
-    // console.log(Object.keys(self.once_handlers))
-
     if(data && data.event) {
       var handlers = self.handlers[data.event];
       if(handlers != null) {
         for(var i = 0; i < handlers.length; i++) {
-          data.is_error ? handlers[i](data) : handlers[i](null, data);
+          data.is_error ? handlers[i](data) : handlers[i](null, data.result);
         }
       }
       
       var handlers = self.once_handlers[data.event];
       if(handlers != null) {
         while(handlers.length > 0) {
-          data.is_error ? handlers.pop()(data) : handlers.pop()(null, data);
+          data.is_error ? handlers.pop()(data) : handlers.pop()(null, data.result);
         }
 
         delete self.once_handlers[data.event];
@@ -73,48 +68,27 @@ API.prototype.login = function(user_name, password, callback) {
 }
 
 API.prototype.find_all_available_gamers = function(callback) {  
-  // Register callback
-  this.once("find_all_available_gamers", function(err, data) {
-    if(err) return callback(err, null);
-    callback(null, data.gamers);
-  });
-  // Fire message
+  this.once("find_all_available_gamers", callback);
   this.socket.emit("find_all_available_gamers", {});
 }
 
 API.prototype.invite_gamer = function(gamer, callback) {
-  this.once("invite_gamer", function(err, data) {
-    if(err) return callback(err);
-    callback(null, data.game);
-  });
-
+  this.once("invite_gamer", callback);
   this.socket.emit("invite_gamer", gamer);
 } 
 
 API.prototype.decline_game = function(invite, callback) {
-  this.once("decline_game", function(err, data) {
-    if(err) return callback(err);
-    callback(null, data.game);
-  });
-
+  this.once("decline_game", callback);
   this.socket.emit("decline_game", invite);
 }
 
 API.prototype.accept_game = function(invite, callback) {
-  this.once("accept_game", function(err, data) {
-    if(err) return callback(err);
-    callback(null, data.game);
-  });
-
+  this.once("accept_game", callback);
   this.socket.emit("accept_game", invite);
 }
 
 API.prototype.place_marker = function(game_id, x, y, callback) {  
-  this.once("place_marker", function(err, data) {
-    if(err) return callback(err);
-    callback(null, data.result);    
-  })
-
+  this.once("place_marker", callback);
   this.socket.emit("place_marker", {
       game_id: game_id
     , x: x
@@ -123,11 +97,7 @@ API.prototype.place_marker = function(game_id, x, y, callback) {
 }
 
 API.prototype.send_message = function(game_id, message, callback) {
-  this.once("send_message", function(err, data) {
-    if(err) return callback(err);
-    callback(null, data.result);
-  });  
-
+  this.once("send_message", callback);  
   this.socket.emit("send_message", {game_id: game_id, message: message});
 }
 

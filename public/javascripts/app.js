@@ -28,15 +28,15 @@ template_handler.start(function(err) {
  * Application events we listen to
  ********************************************************************************************/
 api.on("init", function(err, data) {
-  application_state.session_id = data.session_id;
+  application_state.session_id = data;
 });
 
 api.on('game_move', function(err, data) {
   if(err) return;
   // Get the move data
-  var marker = data.result.marker;
-  var y = data.result.y;
-  var x = data.result.x;
+  var marker = data.marker;
+  var y = data.y;
+  var x = data.x;
   // Select the right box and mark it
   var cell_id_image = "#row" + y + "cell" + x + " img";
   // It was our turn, let's show the mark we set down
@@ -48,10 +48,12 @@ api.on('game_move', function(err, data) {
 });
 
 api.on('game_over', function(err, data) {
-  if(data.result.winner == application_state.session_id) {
+  if(data.draw === true) {
+    general_box_show("It was a draw", "<p>Your equally good, it's a draw</p>");
+  } else if(data.winner == application_state.session_id) {
     general_box_show("Congratulations", "<p>You won</p>");
   } else {
-    general_box_show("You lost", "<p>You got beaten buddy</p>");    
+    general_box_show("You lost", "<p>You got beaten buddy</p>");
   }
 
   // Let's load the first 100 public available games
@@ -80,7 +82,7 @@ api.on('game_invite', function(err, data) {
 api.on('chat_message', function(err, data) {
   if(err) return;
   // Get the message
-  var message = data.result.message;
+  var message = data.message;
   // Get the chat window  
   var chat_window = $('#chat');
   // Push the current message to the bottom
@@ -88,20 +90,22 @@ api.on('chat_message', function(err, data) {
 });
 
 api.on('gamer_joined', function(err, data) {
-  console.log("===================== gamer_joined")
-  console.log(data);
   if(err) return;
   // Get the gamer
-  var gamer = data.result;
+  var gamer = data;
   // Check if we have the gamer already
   if(application_state.gamers == null) return;
   // Check if the gamer already exists and if it does 
   var found = false;
+  console.log("================= gamer_joined")
+  console.log(gamer)
+  console.log(application_state.gamers)
+
   // replace it with the new reference
-  for(var i = 0; i < application_state.gamers; i++) {
+  for(var i = 0; i < application_state.gamers.length; i++) {
     var _gamer = application_state.gamers[i];
 
-    if(_gamer._id == gamer._id) {
+    if(_gamer.user_name == gamer.user_name) {
       found = true;
       // Update the sid and update on
       _gamer.sid = gamer.sid;

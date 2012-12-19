@@ -31,7 +31,7 @@ env.initialize(function(err, app, io, session_store, db) {
     socket.on('send_message', send_message(io, socket, session_store, db));
 
     // Fire the init message to setup the game
-    socket.emit('data', {event:'init', ok:true, session_id: socket.handshake.sessionID});
+    socket.emit('data', {event:'init', ok:true, result: socket.handshake.sessionID});
   });
 
   //
