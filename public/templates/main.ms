@@ -44,7 +44,7 @@
     </div>
     <div class="control-group">
       <div class="controls">
-        <button type="button" class="btn" id="login_button">Register</button>
+        <button type="button" class="btn" id="login_button">Login</button>
       </div>
     </div>
   </form>

@@ -6,10 +6,10 @@ var API = function() {
   this.once_handlers = {};
 
   this.socket.on("data", function(data) {
-    console.log("------------------------- recieved")
-    console.log(data)
-    console.log(Object.keys(self.handlers))
-    console.log(Object.keys(self.once_handlers))
+    // console.log("------------------------- recieved")
+    // console.log(data)
+    // console.log(Object.keys(self.handlers))
+    // console.log(Object.keys(self.once_handlers))
 
     if(data && data.event) {
       var handlers = self.handlers[data.event];

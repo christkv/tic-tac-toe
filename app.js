@@ -21,8 +21,8 @@ env.initialize(function(err, app, io, session_store, db) {
   // websocket api end point handlers (our API)
   //
   io.sockets.on('connection', function (socket) {
-    socket.on('register', register_handler(socket, session_store, db));
-    socket.on('login', login_handler(socket, session_store, db));
+    socket.on('register', register_handler(io, socket, session_store, db));
+    socket.on('login', login_handler(io, socket, session_store, db));
     socket.on('find_all_available_gamers', find_all_available_gamers(io, socket, session_store, db));  
     socket.on('invite_gamer', invite_gamer(io, socket, session_store, db));
     socket.on('decline_game', decline_game(io, socket, session_store, db));

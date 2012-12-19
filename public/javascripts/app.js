@@ -24,14 +24,14 @@ template_handler.start(function(err) {
   $('#invite_box_decline').click(invite_decline_button_handler(application_state, api, template_handler));
 })
 
+/*********************************************************************************************
+ * Application events we listen to
+ ********************************************************************************************/
 api.on("init", function(err, data) {
   application_state.session_id = data.session_id;
 });
 
 api.on('game_move', function(err, data) {
-  console.log("========= game_move")
-  console.log(data)
-
   if(err) return;
   // Get the move data
   var marker = data.result.marker;
@@ -87,6 +87,43 @@ api.on('chat_message', function(err, data) {
   chat_window.append('<p class="chat_msg_other">' + get_date_time_string() + '&#62; ' + message + '</p>');
 });
 
+api.on('gamer_joined', function(err, data) {
+  console.log("===================== gamer_joined")
+  console.log(data);
+  if(err) return;
+  // Get the gamer
+  var gamer = data.result;
+  // Check if we have the gamer already
+  if(application_state.gamers == null) return;
+  // Check if the gamer already exists and if it does 
+  var found = false;
+  // replace it with the new reference
+  for(var i = 0; i < application_state.gamers; i++) {
+    var _gamer = application_state.gamers[i];
+
+    if(_gamer._id == gamer._id) {
+      found = true;
+      // Update the sid and update on
+      _gamer.sid = gamer.sid;
+      _gamer.updated_on = gamer.updated_on;      
+      break;
+    }
+  }
+
+  // If not found let's add it to the list
+  if(!found) application_state.gamers.push(gamer);
+  // If we currently have the dashboard
+  if(template_handler.isTemplate("dashboard")) {
+    var gamers = application_state.gamers;
+    // Let's go to the dashboard of the game
+    template_handler.setTemplate("#view", "dashboard", {gamers:gamers});    
+    // Add handlers to the event
+    for(var i = 0; i < gamers.length; i++) {
+      $("#gamer_" + gamers[i]._id).click(invite_gamer_button_handler(application_state, api, template_handler));
+    }
+  }
+});
+
 /*********************************************************************************************
  * Handlers
  ********************************************************************************************/
@@ -107,6 +144,10 @@ var register_button_handler = function(application_state, api, template_handler)
         application_state.gamers = gamers;
         // Let's go to the dashboard of the game
         template_handler.setTemplate("#view", "dashboard", {gamers:gamers});
+        // Add handlers to the event
+        for(var i = 0; i < gamers.length; i++) {
+          $("#gamer_" + gamers[i]._id).click(invite_gamer_button_handler(application_state, api, template_handler));
+        }
       });
     });
   }
@@ -160,7 +201,6 @@ var invite_gamer_button_handler = function(application_state, api, template_hand
 
 var invite_accept_button_handler = function(application_state, api, template_handler) {
   return function() {
-    console.log("=== invite_accept_button_handler")    
     // Accept the game invite
     api.accept_game(application_state.invite, function(err, game) {
       if(err) return error_box_show(err.error);
@@ -172,7 +212,6 @@ var invite_accept_button_handler = function(application_state, api, template_han
 
 var invite_decline_button_handler = function(application_state, api, template_handler) {
   return function() {
-    console.log("=== invite_decline_button_handler")
     // Decline the game invite
     api.decline_game(application_state.invite, function(err, result) {
       if(err) return error_box_show(err.error);
@@ -190,9 +229,6 @@ var setupBoardGame = function(application_state, api, template_handler, game) {
   template_handler.setTemplate("#view", "board", {});
   // Set the marker for our player (X if we are the starting player)
   application_state.marker = application_state.session_id == game.current_player ? "x" : "o";
-  // Just print the state
-  console.log(application_state)
-
   // Get all the rows
   var rows = $('#board div');
 
