@@ -6,6 +6,7 @@ var env                               = require('./env')
   , decline_game                      = require('./lib/handlers/gamer_handler').decline_game
   , accept_game                       = require('./lib/handlers/gamer_handler').accept_game
   , place_marker                      = require('./lib/handlers/gamer_handler').place_marker
+  , chat                              = require('./lib/handlers/chat_handler').chat
   , main_controller                   = require('./lib/controllers/main_controller');
 
 env.initialize(function(err, app, io, session_store, db) {  
@@ -27,6 +28,10 @@ env.initialize(function(err, app, io, session_store, db) {
     socket.on('decline_game', decline_game(io, socket, session_store, db));
     socket.on('accept_game', accept_game(io, socket, session_store, db));
     socket.on('place_marker', place_marker(io, socket, session_store, db));
+    socket.on('chat', chat(io, socket, session_store, db));
+
+    // Fire the init message to setup the game
+    socket.emit('data', {event:'init', ok:true, session_id: socket.handshake.sessionID});
   });
 
   //

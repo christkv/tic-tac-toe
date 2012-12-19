@@ -1,4 +1,4 @@
-var verify_game = require('../lib/handlers/gamer_handler').verify_game
+var is_game_over = require('../lib/handlers/gamer_handler').is_game_over
 
 /**
  * Retrieve the server information for the current
@@ -25,24 +25,24 @@ exports['Should verify that board algorith is correct'] = function(test) {
     [,,,], [,,,], [,,,], [,,,]
   ];
 
-  test.equal(false, verify_game(board, 2, 2, 'x'));
+  test.equal(false, is_game_over(board, 2, 2, 'x'));
 
   board = [
     ['x',,,], ['x',,,], ['x',,,], ['x',,,]
   ];
 
-  test.equal(true, verify_game(board, 0, 0, 'x'));
+  test.equal(true, is_game_over(board, 0, 0, 'x'));
 
   board = [
     ['x','x','x','x'], [,,,], [,,,], [,,,]
   ];
 
-  test.equal(true, verify_game(board, 0, 0, 'x'));
+  test.equal(true, is_game_over(board, 0, 0, 'x'));
 
   board = [
     ['x',,,], [,'x',,], [,,'x',], [,,,'x']
   ];
 
-  test.equal(true, verify_game(board, 0, 0, 'x'));
+  test.equal(true, is_game_over(board, 0, 0, 'x'));
   test.done();
 }

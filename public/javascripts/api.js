@@ -1,7 +1,7 @@
 var API = function() {
   var self = this;
 
-  this.socket = io.connect("http://localhost");
+  this.socket = io.connect("http://" + document.domain);
   this.handlers = {};
   this.once_handlers = {};
 
@@ -115,7 +115,7 @@ API.prototype.join_game = function(game_id, callback) {
 API.prototype.place_marker = function(game_id, x, y, callback) {  
   this.once("place_marker", function(err, data) {
     if(err) return callback(err);
-    callback(null, data.move);    
+    callback(null, data.result);    
   })
 
   this.socket.emit("place_marker", {

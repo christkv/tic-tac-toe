@@ -23,7 +23,7 @@ template_handler.start(function(err) {
   $('#invite_box_decline').click(invite_decline_button_handler(application_state, api, template_handler));
 })
 
-api.on("init", function(data) {
+api.on("init", function(err, data) {
   application_state.session_id = data.session_id;
 });
 
@@ -33,9 +33,9 @@ api.on('game_move', function(err, data) {
 
   if(err) return;
   // Get the move data
-  var marker = data.move.marker;
-  var y = data.move.y;
-  var x = data.move.x;
+  var marker = data.result.marker;
+  var y = data.result.y;
+  var x = data.result.x;
   // Select the right box and mark it
   var cell_id_image = "#row" + y + "cell" + x + " img";
   // It was our turn, let's show the mark we set down
@@ -47,6 +47,25 @@ api.on('game_move', function(err, data) {
 });
 
 api.on('game_over', function(err, data) {
+  if(data.result.winner == application_state.session_id) {
+    general_box_show("Congratulations", "<p>You won</p>");
+  } else {
+    general_box_show("You lost", "<p>You got beaten buddy</p>");    
+  }
+
+  // Let's load the first 100 public available games
+  api.find_all_available_gamers(function(err, gamers) {
+    if(err) return error_box_show(err.error);
+
+    // Save the list of games in our game state
+    application_state.gamers = gamers;
+    // Let's go to the dashboard of the game
+    template_handler.setTemplate("#view", "dashboard", {gamers:gamers});
+    // Add handlers to the event
+    for(var i = 0; i < gamers.length; i++) {
+      $("#gamer_" + gamers[i]._id).click(invite_gamer_button_handler(application_state, api, template_handler));
+    }
+  });
 });
 
 api.on('game_invite', function(err, data) {
@@ -186,11 +205,17 @@ var game_board_cell_handler = function(application_state, api, template_handler,
     var cell_id = this.id;
     var cell_id_image = "#" + cell_id + " img";
     // Let's attempt to do a move
-    api.place_marker(application_state.game._id, cell_number, row_number, function(err, move) {
+    api.place_marker(application_state.game._id, cell_number, row_number, function(err, data) {
       if(err) return error_box_show(err.error);
 
-      // It was our turn, let's show the mark we set down
-      if(move.marker == 'x') {
+      // If we won
+      if(data.winner != null && data.winner == application_state.session_id) {
+        general_box_show("Congratulations", "<p>You won</p>");
+      } else if(data.winner != null) {
+        general_box_show("You lost", "<p>You got beaten buddy</p>");    
+      } 
+
+      if(data.marker == 'x') {
         $(cell_id_image).attr("src", "/img/cross.png");
       } else {
         $(cell_id_image).attr("src", "/img/circle.png");
@@ -206,6 +231,14 @@ var error_box_show = function(error) {
   // Set fields for the error
   $('#status_box_header').html("Registration Error");
   $('#status_box_body').html(error);
+  // Show the modal box
+  $('#status_box').modal({backdrop:true, show:true})    
+}
+
+var general_box_show = function(title, body) {
+  // Set fields for the error
+  $('#status_box_header').html(title);
+  $('#status_box_body').html(body);
   // Show the modal box
   $('#status_box').modal({backdrop:true, show:true})    
 }
