@@ -109,9 +109,6 @@ API.prototype.accept_game = function(invite, callback) {
   this.socket.emit("accept_game", invite);
 }
 
-API.prototype.join_game = function(game_id, callback) {  
-}
-
 API.prototype.place_marker = function(game_id, x, y, callback) {  
   this.once("place_marker", function(err, data) {
     if(err) return callback(err);
@@ -125,7 +122,13 @@ API.prototype.place_marker = function(game_id, x, y, callback) {
   });
 }
 
-API.prototype.quit_game = function(game_id, callback) {  
+API.prototype.send_message = function(game_id, message, callback) {
+  this.once("send_message", function(err, data) {
+    if(err) return callback(err);
+    callback(null, data.result);
+  });  
+
+  this.socket.emit("send_message", {game_id: game_id, message: message});
 }
 
 API.prototype.fetch_statistics = function(user_id, callback) {  

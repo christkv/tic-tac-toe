@@ -10,7 +10,26 @@
   margin-right: 5px
 }
 
+#chat p {
+  margin: 0px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+}
+
 #chat {
   border: 1px solid gray;
   height: 400px;
+}
+
+.chat_msg_other {
+  font-size: 14px;
+  margin-left: 5px;
+  margin-right: 5px;
+  color: red;
+}
+
+.chat_msg_current {
+  font-size: 14px;
+  margin-left: 5px;
+  margin-right: 5px;
+  color: blue;
 }

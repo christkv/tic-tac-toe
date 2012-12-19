@@ -11,6 +11,7 @@ var template_handler = new TemplateHandler({
   , "board": "/templates/board.ms"
   , "decline_game": "/templates/decline_game.ms"
 });
+
 // Wait for template to be loaded
 template_handler.start(function(err) {
   // Set the current template on the view container
@@ -74,6 +75,16 @@ api.on('game_invite', function(err, data) {
   application_state.invite = data;
   // Open the invite box
   game_invite_box_show(data);
+});
+
+api.on('chat_message', function(err, data) {
+  if(err) return;
+  // Get the message
+  var message = data.result.message;
+  // Get the chat window  
+  var chat_window = $('#chat');
+  // Push the current message to the bottom
+  chat_window.append('<p class="chat_msg_other">' + get_date_time_string() + '&#62; ' + message + '</p>');
 });
 
 /*********************************************************************************************
@@ -164,8 +175,7 @@ var invite_decline_button_handler = function(application_state, api, template_ha
     console.log("=== invite_decline_button_handler")
     // Decline the game invite
     api.decline_game(application_state.invite, function(err, result) {
-        if(err) return error_box_show(err.error);
-      // Nothing to do the box went away
+      if(err) return error_box_show(err.error);
     });
   }
 }
@@ -195,6 +205,29 @@ var setupBoardGame = function(application_state, api, template_handler, game) {
       $("#" + cells[j].id).click(game_board_cell_handler(application_state, api, template_handler, game));
     }
   }
+
+  // Map up the chat handler
+  $('#chat_message').keypress(chat_handler(application_state, api, template_handler, game));
+}
+
+var chat_handler = function(application_state, api, template_handler, game) {
+  return function(e) {    
+    if(e.which == 13) {
+      var chat_input = $('#chat_message');
+      var chat_window = $('#chat');
+      // Fetch the message the user entered
+      var message = chat_input.val();
+      if(application_state.game == null) return;
+      // Send it off to the other gamer
+      api.send_message(application_state.game._id, message, function(err, data) {
+        if(err) return error_box_show(err.error);
+        // Push the current message to the bottom
+        chat_window.append('<p class="chat_msg_current">' + get_date_time_string() + '&#62; ' + message + "</p>");
+        // Clear out the messages
+        chat_input.val('');
+      });
+    }
+  }  
 }
 
 var game_board_cell_handler = function(application_state, api, template_handler, game) {
@@ -227,6 +260,15 @@ var game_board_cell_handler = function(application_state, api, template_handler,
 /*********************************************************************************************
  * Helper methods
  ********************************************************************************************/
+var get_date_time_string = function() {
+  var date = new Date();
+  var string = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+  string += ":" + (date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes());
+  string += ":" + (date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds());
+  return string;
+}
+
+
 var error_box_show = function(error) {
   // Set fields for the error
   $('#status_box_header').html("Registration Error");
