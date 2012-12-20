@@ -1,3 +1,6 @@
+/**
+ * Wraps the API used for the game and handles the socketIO connection
+ */
 var API = function() {
   var self = this;
 
@@ -5,7 +8,11 @@ var API = function() {
   this.handlers = {};
   this.once_handlers = {};
 
+  // Handle the data returned over the SocketIO
   this.socket.on("data", function(data) {
+
+    // If the data object has an event member we have
+    // a valid event message from the server
     if(data && data.event) {
       var handlers = self.handlers[data.event];
       if(handlers != null) {
@@ -26,18 +33,24 @@ var API = function() {
   });
 }
 
+/**
+ * Register an event listener callback (will keep receiving messages)
+ */
 API.prototype.on = function(event, callback) {
   if(this.handlers[event] == null) this.handlers[event] = [];
   this.handlers[event].push(callback);
 }
 
+/**
+ * Register an event listener callback for a single instance of the event
+ */
 API.prototype.once = function(event, callback) {
   if(this.once_handlers[event] == null) this.once_handlers[event] = [];
   this.once_handlers[event].push(callback);
 }
 
-/** 
- * Available api methods
+/**
+ * Register a new user
  */
 API.prototype.register = function(full_name, user_name, password, callback) {  
   // Do basic validation
@@ -54,6 +67,9 @@ API.prototype.register = function(full_name, user_name, password, callback) {
   });
 }
 
+/**
+ * Login a user
+ */
 API.prototype.login = function(user_name, password, callback) {  
   // Do basic validation
   if(user_name == null || user_name.length == 0) return callback(create_error("login", "User name cannot be empty"));
@@ -67,26 +83,41 @@ API.prototype.login = function(user_name, password, callback) {
   });
 }
 
+/**
+ * Find all available gamers that are active
+ */
 API.prototype.find_all_available_gamers = function(callback) {  
   this.once("find_all_available_gamers", callback);
   this.socket.emit("find_all_available_gamers", {});
 }
 
+/**
+ * Invite a gamer to a new game
+ */
 API.prototype.invite_gamer = function(gamer, callback) {
   this.once("invite_gamer", callback);
   this.socket.emit("invite_gamer", gamer);
 } 
 
+/**
+ * Decline an invite to play a game
+ */
 API.prototype.decline_game = function(invite, callback) {
   this.once("decline_game", callback);
   this.socket.emit("decline_game", invite);
 }
 
+/**
+ * Accept an invite to play a game
+ */
 API.prototype.accept_game = function(invite, callback) {
   this.once("accept_game", callback);
   this.socket.emit("accept_game", invite);
 }
 
+/**
+ * Place a marker on a specific game at a specific location
+ */
 API.prototype.place_marker = function(game_id, x, y, callback) {  
   this.once("place_marker", callback);
   this.socket.emit("place_marker", {
@@ -96,14 +127,18 @@ API.prototype.place_marker = function(game_id, x, y, callback) {
   });
 }
 
+/**
+ * Send a message to a specific gamer on a specific game
+ */
 API.prototype.send_message = function(game_id, message, callback) {
   this.once("send_message", callback);  
   this.socket.emit("send_message", {game_id: game_id, message: message});
 }
 
-API.prototype.fetch_statistics = function(user_id, callback) {  
-}
-
+/**
+ * Simple method to create a formated error message that fits the
+ * format returned from the server
+ */
 var create_error = function(event, err) {
   return {
       event: event

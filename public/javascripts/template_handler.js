@@ -5,7 +5,6 @@
 var TemplateHandler = function(templates) {
   this.templates = templates;
   this.template_file_content = {};
-  this.current_template = null;
   this.numberOfTemplates = 0;
   // Get templates count
   for(var name in this.templates) {
