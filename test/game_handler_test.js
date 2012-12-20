@@ -44,5 +44,12 @@ exports['Should verify that board algorith is correct'] = function(test) {
   ];
 
   test.equal(true, is_game_over(board, 0, 0, 'x'));
+
+  board = [
+    [,,,'x'], [,,'x',], [,'x',,], ['x',,,]
+  ];
+
+  test.equal(true, is_game_over(board, 0, 0, 'x'));
+
   test.done();
 }
