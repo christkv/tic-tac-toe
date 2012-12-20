@@ -92,7 +92,22 @@ var run = function(callback) {
         return callback(err);
       }
 
-      console.log(format("server listening on %s:%s", APP_HOST, APP_PORT));
+      // Print out a nice message to the console
+      console.log(
+          [ ""
+          , "        |       |"
+          , "        |       |"
+          , "  — — — | — — — | — — — "
+          , "        |       |"
+          , "        |       |"
+          , "  — — — | — — — | — — — "
+          , "        |       |"
+          , "        |       |"
+          , ""
+          , "tic-tac-toe server v" + require('./package.json').version
+          , "listening on port " + APP_PORT + " and host " + APP_HOST
+        ].join('\n'));
+
       // Return successful start of server
       callback(null);
     });
